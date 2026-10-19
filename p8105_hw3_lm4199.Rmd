@@ -5,6 +5,8 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+
+library(patchwork)
 ```
 
 ## Problem 1
@@ -99,4 +101,39 @@ noaa_monthly_df |>
 
 July is much warmer than January. Temperatures vary across stations, but many stations show similar changes from year to year. January also appears to have larger year-to-year changes than July. There are a few unusually low values, including a July value around 14°C in the late 1980s. These observations may reflect local conditions, limited daily records, or data quality issues and would need further checking. A clear long-term trend is not obvious from this plot.
 
-### 
+### Make another two-panel plot 
+
+```{r}
+temperature_plot =
+  noaa_df |>
+  filter(!is.na(tmin), !is.na(tmax)) |>
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin_2d(bins = 60) +
+  scale_fill_viridis_c(trans = "log10") +
+  labs(
+    title = "Maximum vs Minimum Temperature",
+    x = "Daily minimum temperature (°C)",
+    y = "Daily maximum temperature (°C)",
+    fill = "Count"
+  )
+
+snowfall_plot =
+  noaa_df |>
+  filter(snow > 0, snow < 100) |>
+  ggplot(aes(x = factor(year), y = snow)) +
+  geom_boxplot() +
+  labs(
+    title = "Snowfall Distribution by Year",
+    x = "Year",
+    y = "Daily snowfall (mm)"
+  )
+
+temperature_plot + snowfall_plot
+```
+
+I used a two-dimensional histogram because the dataset contains many observations. Points would overlap heavily in a scatterplot. The fill color shows the number of observations in each bin, making the concentration of records easier to see.
+
+Maximum and minimum temperatures show a strong positive relationship. Most observations form a diagonal band, but a few extreme values are far from the main pattern. Some records also appear to have minimum temperatures higher than maximum temperatures. These observations would need further checking.
+
+For snowfall values greater than 0 and less than 100 mm, the distributions are similar across most years. The median is around 25 mm in most years, although some years, such as 2006, have a narrower interquartile range. There is no clear long-term change in the distributions shown. This plot describes snowfall amounts on the selected days, rather than total annual snowfall.
+
