@@ -139,7 +139,7 @@ For snowfall values greater than 0 and less than 100 mm, the distributions are s
 
 ## Problem 2
 
-### Import and clean
+### Import, clean and merge
 
 ```{r}
 nhanes_covar_df =
@@ -173,3 +173,42 @@ nhanes_df =
   mutate(minute = as.integer(minute))
 
 ```
+
+```{r}
+nhanes_sex_table =
+  nhanes_covar_df |>
+  count(education, sex) |>
+  pivot_wider(
+    names_from = sex,
+    values_from = n,
+    values_fill = 0
+  )
+
+nhanes_sex_table |>
+  knitr::kable(
+    col.names = c("Education", "Male", "Female"),
+    caption = "Number of participants by education and sex")
+
+nhanes_covar_df |>
+  ggplot(aes(x = sex, y = age, fill = sex)) +
+  geom_boxplot(width = 0.5) +
+  facet_wrap(~ education, nrow = 1) +
+  labs(
+    title = "Age Distribution by Education and Sex",
+    x = "Sex",
+    y = "Age (years)"
+  ) 
+```
+
+The more-than-high-school group has the most participants, with 56 men and 59 women. The less-than-high-school group has similar numbers of men and women, while the high-school-equivalent group has more men than women.
+
+For both sexes, the more-than-high-school group has a lower median age than the other education groups. In the high-school-equivalent group, women have a higher median age than men. Men and women have similar median ages in the less-than-high-school group. The age distributions overlap across all groups.
+
+
+
+
+
+
+
+
+
