@@ -233,8 +233,37 @@ nhanes_total_df |>
 
 Total daily activity tends to be lower at older ages, although the relationship is not linear. Women have higher smoothed activity levels than men across much of the age range in the more-than-high-school group. In the high-school-equivalent group, the female curve is higher mainly around ages 30–50. Sex differences vary with age in the less-than-high-school group. There is substantial variation between participants of similar ages, so these curves describe overall patterns rather than individual changes with aging.
 
+### Make a three-panel plot
 
+```{r}
+nhanes_time_df =
+  nhanes_df |>
+  group_by(education, sex, minute) |>
+  summarise(
+    mean_activity = mean(activity),
+    .groups = "drop"
+  ) |>
+  mutate(hour = (minute - 1) / 60)
 
+nhanes_time_df |>
+  ggplot(aes(x = hour, y = mean_activity, color = sex)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ education, nrow = 1) +
+  scale_x_continuous(
+    breaks = c(0, 6, 12, 18, 24),
+    limits = c(0, 24)
+  ) +
+  labs(
+    title = "Activity Patterns over 24 Hours",
+    x = "Hour of day",
+    y = "Mean activity (MIMS)",
+    color = "Sex"
+  )
+
+```
+
+All groups show lower activity at night and higher activity during the day. The minute-level averages increase after about 6 a.m. and decline in the evening. Women generally have higher daytime activity than men in the high-school-equivalent and more-than-high-school groups. Sex differences are smaller in the less-than-high-school group. The smooth curves show the overall daily pattern but do not capture all short-term changes, especially near midnight.
 
 
 
