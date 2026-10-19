@@ -137,3 +137,39 @@ Maximum and minimum temperatures show a strong positive relationship. Most obser
 
 For snowfall values greater than 0 and less than 100 mm, the distributions are similar across most years. The median is around 25 mm in most years, although some years, such as 2006, have a narrower interquartile range. There is no clear long-term change in the distributions shown. This plot describes snowfall amounts on the selected days, rather than total annual snowfall.
 
+## Problem 2
+
+### Import and clean
+
+```{r}
+nhanes_covar_df =
+  read_csv("data/nhanes_covar.csv", skip = 4, na = c("",".","NA")) |>
+  janitor::clean_names() |>
+  filter(age >= 21) |>
+  drop_na(sex, age, bmi, education) |>
+  mutate(
+    sex = factor(sex, levels = c(1, 2), labels = c("Male", "Female")),
+    education = factor(education, levels = c(1, 2, 3),
+      labels = c(
+        "Less than high school",
+        "High school equivalent",
+        "More than high school")
+    )
+  )
+
+nhanes_accel_df =
+  read_csv("data/nhanes_accel.csv", na = c("",".","NA")) |>
+  janitor::clean_names()
+
+nhanes_df =
+  nhanes_covar_df |>
+  inner_join(nhanes_accel_df, by = "seqn") |>
+  pivot_longer(
+    cols = min1:min1440,
+    names_to = "minute",
+    names_prefix = "min",
+    values_to = "activity"
+  ) |>
+  mutate(minute = as.integer(minute))
+
+```
