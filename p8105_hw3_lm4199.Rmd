@@ -306,10 +306,93 @@ citibike_df =
 
 The combined dataset contains `r nrow(citibike_df)` rides and `r ncol(citibike_df)` variables. Each row represents one ride. Variables include ride ID, bike type, weekday, ride duration, starting and ending stations, membership status, year, and month. I added year and month to each file before combining the four datasets and set the categorical variables to factors. Some station names are missing, but these rides were retained for analyses that do not require station names. The data are a 1% sample of rides lasting less than four hours in January and July of 2020 and 2024.
 
+### Make a table
 
+```{r}
+citibike_ride_table =
+  citibike_df |>
+  count(year, month, member_casual) |>
+  pivot_wider(
+    names_from = member_casual,
+    values_from = n,
+    values_fill = 0
+  ) |>
+  arrange(year, month)
 
+citibike_ride_table |>
+  knitr::kable(
+    col.names = c("Year", "Month", "Casual", "Member"),
+    caption = "Number of sampled rides by year, month, and membership"
+  )
+```
 
+Members account for more sampled rides than casual riders in all four year-month groups. Both membership groups have more rides in July than in January in each year. For the same month, sampled ride counts are higher in 2024 than in 2020 for both groups. July 2024 has the highest total number of sampled rides.
 
+###
+
+```{r}
+citibike_top_stations =
+  citibike_df |>
+  filter(year == "2024", month == "July", !is.na(start_station_name)) |>
+  count(start_station_name, sort = TRUE) |>
+  slice_head(n = 5)
+
+citibike_top_stations |>
+  knitr::kable(
+    col.names = c("Starting station", "Number of rides"),
+    caption = "Top five starting stations in July 2024"
+  )
+```
+
+In the July 2024 sample, Pier 61 at Chelsea Piers is the most popular starting station, with 163 rides, followed by University Pl & E 14 St with 155 rides.
+
+### Make a line chart
+
+```{r}
+citibike_median_df =
+  citibike_df |>
+  group_by(year, month, weekdays) |>
+  summarise(
+    median_duration = median(duration), .groups = "drop")
+
+citibike_median_df |>
+  ggplot(aes(x = weekdays, y = median_duration, color = year, group = year)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ month, nrow = 1) +
+  labs(
+    title = "Median Ride Duration by Weekday, Month, and Year",
+    x = "Day of week",
+    y = "Median ride duration (minutes)",
+    color = "Year"
+  )
+
+```
+
+Median ride duration is higher in 2020 than in 2024 for every weekday in both months. July also has longer median rides than January in both years. Weekend increases are especially clear in July 2020. However, this pattern is not consistent across all groups: January 2024 shows little weekend increase, and its Sunday median is lower than Saturday's.
+
+### 
+
+```{r}
+citibike_df |>
+  filter(year == "2024") |>
+  ggplot(aes(x = rideable_type, y = duration, fill = rideable_type)) +
+  geom_boxplot() +
+  facet_grid(month ~ member_casual) +
+  scale_x_discrete(
+    labels = c(
+      "classic_bike" = "Classic",
+      "electric_bike" = "Electric")
+  ) +
+  scale_y_log10(breaks = c(1, 5, 10, 30, 60, 120, 240)) +
+  labs(
+    title = "Ride Duration by Month, Membership, and Bike Type in 2024",
+    x = "Bike type",
+    y = "Ride duration (minutes, log scale)"
+  )
+```
+
+Casual riders have longer median ride durations than members for both bike types in both months. Among casual riders, classic bikes have longer median durations than electric bikes. Among members, electric bikes have slightly longer medians, especially in July. Median durations are higher in July than in January across all groups. There are also some long rides in every group. These comparisons describe associations and do not establish causal effects.
 
 
 
